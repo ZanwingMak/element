@@ -11,7 +11,7 @@
 
 <script>
 // 正确import方式
-// import {ElInputUrl} from '@zanwingmak/element-ui'
+// import {ElInputUrl} from '@marv1n/element-ui'
 const ElInputUrl = require('element-ui/packages/input-url/src/main.vue').default
 export default {
   data() {

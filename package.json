@@ -1,5 +1,5 @@
 {
-  "name": "@zanwingmak/element-ui",
+  "name": "@marv1n/element-ui",
   "version": "1.0.1",
   "description": "A Component Library for Vue.js.",
   "main": "lib/element-ui.common.js",
@@ -51,9 +51,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/femessage/element.git"
+    "url": "git+https://github.com/ZanwingMak/element.git"
   },
-  "homepage": "http://femessage.github.io/element/",
+  "homepage": "http://ZanwingMak.github.io/element/",
   "keywords": [
     "eleme",
     "vue",
@@ -61,7 +61,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/femessage/element/issues"
+    "url": "https://github.com/ZanwingMak/element/issues"
   },
   "unpkg": "lib/index.js",
   "style": "lib/theme-chalk/index.css",

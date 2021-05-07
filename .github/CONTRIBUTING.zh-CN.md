@@ -1,4 +1,4 @@
-# @zanwingmak/element-ui 贡献指南
+# @marv1n/element-ui 贡献指南
 
 Hi! 首先感谢你使用 Element UI。
 
