@@ -208,7 +208,9 @@
     methods: {
       flattenTree(datas) {
         return datas.reduce((conn, data) => {
-          conn.push(data);
+          if (data.visible) {
+            conn.push(data); 
+          }
           if (data.expanded && data.childNodes.length) {
             conn.push(...this.flattenTree(data.childNodes));
           }
