@@ -173,7 +173,7 @@ Show a full screen animation while loading data.
 ### Service
 You can also invoke Loading with a service. Import Loading service:
 ```javascript
-import { Loading } from '@femessage/element-ui';
+import { Loading } from '@zanwingmak/element-ui';
 ```
 Invoke it:
 ```javascript

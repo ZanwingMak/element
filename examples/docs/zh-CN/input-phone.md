@@ -11,7 +11,7 @@
 
 <script>
 // 正确import方式
-// import {ElInputPhone} from '@femessage/element-ui'
+// import {ElInputPhone} from '@zanwingmak/element-ui'
 const ElInputPhone = require('element-ui/packages/input-phone/src/main.vue').default
 export default {
   data() {

@@ -1,6 +1,6 @@
 {
-  "name": "@femessage/element-ui",
-  "version": "2.12.0",
+  "name": "@zanwingmak/element-ui",
+  "version": "1.0.1",
   "description": "A Component Library for Vue.js.",
   "main": "lib/element-ui.common.js",
   "files": [
@@ -51,7 +51,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com:femessage/element.git"
+    "url": "git+https://github.com/femessage/element.git"
   },
   "homepage": "http://femessage.github.io/element/",
   "keywords": [
@@ -175,5 +175,11 @@
   "vetur": {
     "tags": "vetur-helper/element-tags.json",
     "attributes": "vetur-helper/element-attributes.json"
-  }
+  },
+  "directories": {
+    "example": "examples",
+    "lib": "lib",
+    "test": "test"
+  },
+  "author": "marvin"
 }
