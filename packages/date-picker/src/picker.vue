@@ -57,7 +57,7 @@
       :name="name && name[0]"
       @input="handleStartInput"
       @change="handleStartChange"
-      @focus="handleFocus('min')"
+      @focus="handleFocus"
       class="el-range-input">
     <slot name="range-separator">
       <span class="el-range-separator">{{ rangeSeparator }}</span>
@@ -72,7 +72,7 @@
       :name="name && name[1]"
       @input="handleEndInput"
       @change="handleEndChange"
-      @focus="handleFocus('max')"
+      @focus="handleFocus"
       class="el-range-input">
     <i
       @click="handleClickIcon"
@@ -91,13 +91,16 @@ import Popper from 'element-ui/src/utils/vue-popper';
 import Emitter from 'element-ui/src/mixins/emitter';
 import ElInput from 'element-ui/packages/input';
 import merge from 'element-ui/src/utils/merge';
+import {isEmpty} from '../../../src/utils/util';
 
 const NewPopper = {
   props: {
     appendToBody: Popper.props.appendToBody,
     offset: Popper.props.offset,
     boundariesPadding: Popper.props.boundariesPadding,
-    arrowOffset: Popper.props.arrowOffset
+    arrowOffset: Popper.props.arrowOffset,
+    placement: Popper.props.placement,
+    transformOrigin: Popper.props.transformOrigin
   },
   methods: Popper.methods,
   data() {
@@ -144,10 +147,9 @@ const RANGE_FORMATTER = function(value, format) {
   if (Array.isArray(value) && value.length === 2) {
     const start = value[0];
     const end = value[1];
-
-    if (start && end) {
-      return [DATE_FORMATTER(start, format), DATE_FORMATTER(end, format)];
-    }
+    // if (start && end) {
+    return [ !isEmpty(start) ? DATE_FORMATTER(start, format) : '', !isEmpty(end) ? DATE_FORMATTER(end, format) : ''];
+    // }
   }
   return '';
 };
@@ -158,8 +160,7 @@ const RANGE_PARSER = function(array, format, separator) {
   if (array.length === 2) {
     const range1 = array[0];
     const range2 = array[1];
-
-    return [DATE_PARSER(range1, format), DATE_PARSER(range2, format)];
+    return [ !isEmpty(range1) ? DATE_PARSER(String(range1), format) : '', !isEmpty(range2) ? DATE_PARSER(String(range2), format) : ''];
   }
   return [];
 };
@@ -291,14 +292,15 @@ const formatAsFormatAndType = (value, customFormat, type) => {
 const valueEquals = function(a, b) {
   // considers Date object and string
   const dateEquals = function(a, b) {
-    const aIsDate = a instanceof Date;
-    const bIsDate = b instanceof Date;
-    if (aIsDate && bIsDate) {
-      return a.getTime() === b.getTime();
-    }
-    if (!aIsDate && !bIsDate) {
-      return a === b;
-    }
+    // const aIsDate = a instanceof Date;
+    // const bIsDate = b instanceof Date;
+    // if (aIsDate && bIsDate) {
+    //   return a.getTime() === b.getTime();
+    // }
+    // if (!aIsDate && !bIsDate) {
+    //   return a === b;
+    // }
+    // return false;
     return false;
   };
 
@@ -401,8 +403,7 @@ export default {
       showClose: false,
       userInput: null,
       valueOnOpen: null, // value when picker opens, used to determine whether to emit change
-      unwatchPickerOptions: null,
-      inputType: null
+      unwatchPickerOptions: null
     };
   },
 
@@ -606,9 +607,17 @@ export default {
         return value;
       }
     },
-
+    // NOTE 兼容修改了日期
     formatToValue(date) {
-      const isFormattable = isDateObject(date) || (Array.isArray(date) && date.every(isDateObject));
+      if (this.selectionMode === 'day' && Array.isArray(date)) {
+        if (isDateObject(date[0]) && !isDateObject(date[1])) {
+          date[1] = this.value && this.value.length === 2 ? this.value[1] : '' ;
+        } else if (isDateObject(date[1]) && !isDateObject(date[0])) {
+          date[0] = this.value && this.value.length === 2 ? this.value[0] : '' ;
+        }
+
+      }
+      const isFormattable = isDateObject(date) || (Array.isArray(date) && (this.selectionMode === 'day' || date.every(isDateObject)));
       if (this.valueFormat && isFormattable) {
         return formatAsFormatAndType(date, this.valueFormat, this.type, this.rangeSeparator);
       } else {
@@ -725,11 +734,10 @@ export default {
       this.userInput = initialValue === '' ? null : initialValue;
     },
 
-    handleFocus(inputType) {
+    handleFocus() {
       const type = this.type;
 
       if (HAVE_TRIGGER_TYPES.indexOf(type) !== -1 && !this.pickerVisible) {
-        this.inputType = inputType;
         this.pickerVisible = true;
       }
       this.$emit('focus', this);
@@ -816,7 +824,6 @@ export default {
 
       this.picker.value = this.parsedValue;
       this.picker.resetView && this.picker.resetView();
-      this.picker.inputType = this.inputType;
 
       this.$nextTick(() => {
         this.picker.adjustSpinners && this.picker.adjustSpinners();
@@ -873,6 +880,7 @@ export default {
         this.userInput = null;
         this.pickerVisible = this.picker.visible = visible;
         this.emitInput(date);
+
         this.picker.resetView && this.picker.resetView();
       });
 
