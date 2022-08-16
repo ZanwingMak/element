@@ -342,7 +342,8 @@ export default {
       minDate: '',
       maxDate: '',
       leftDate: new Date(),
-      rightDate: nextMonth(new Date()),
+      rightDate: new Date(),
+      // rightDate: nextMonth(new Date()),
       rangeState: {
         // endDate: null,
         selecting: false,
@@ -457,7 +458,9 @@ export default {
       if (!Array.isArray(this.value)) {
         const [left, right] = calcDefaultValue(val);
         this.leftDate = left;
-        this.rightDate = val && val[1] && this.unlinkPanels ? right : nextMonth(this.leftDate);
+        this.rightDate = right;
+        // note 原来
+        // this.rightDate = val && val[1] && this.unlinkPanels ? right : nextMonth(this.leftDate);
       }
     }
   },
@@ -467,7 +470,9 @@ export default {
       this.minDate = null;
       this.maxDate = null;
       this.leftDate = calcDefaultValue(this.defaultValue)[0];
-      this.rightDate = nextMonth(this.leftDate);
+      this.rightDate = this.leftDate;
+      // note 原来的
+      // this.rightDate = nextMonth(this.leftDate);
       this.$emit('pick', null);
     },
 
@@ -721,7 +726,7 @@ export default {
     // 校验合法性
     isValidValue(value) {
       let status = function(disabledDate, value) {
-        if (value.every(isEmpty)) {
+        if (!isEmpty(value[0]) && !isEmpty(value[1])) {
           return value[0].getTime() <= value[1].getTime();
         }
         if (!isEmpty(value[0]) || !isEmpty(value[1])) return true;

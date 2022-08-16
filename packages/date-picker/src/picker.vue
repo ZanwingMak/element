@@ -682,10 +682,12 @@ export default {
       if (value) {
         this.userInput = [this.formatToString(value), this.displayValue[1]];
         const newValue = [value, this.picker.value && this.picker.value[1]];
-        this.picker.value = newValue;
         if (this.isValidValue(newValue)) {
+          this.picker.value = newValue;
           this.emitInput(newValue);
           this.userInput = null;
+        } else {
+          this.userInput[0] = '';
         }
       }
     },
@@ -695,10 +697,12 @@ export default {
       if (value) {
         this.userInput = [this.displayValue[0], this.formatToString(value)];
         const newValue = [this.picker.value && this.picker.value[0], value];
-        this.picker.value = newValue;
         if (this.isValidValue(newValue)) {
+          this.picker.value = newValue;
           this.emitInput(newValue);
           this.userInput = null;
+        } else {
+          this.userInput[1] = '';
         }
       }
     },

@@ -1,5 +1,5 @@
 <template>
-  <table @click="handleMonthTableClick" @mousemove="handleMouseMove" class="el-month-table">
+  <table @click="handleMonthTableClick" @mousemove="handleMouseMove" class="el-month-table"  :key="tableKey">
     <tbody>
     <tr v-for="(row, key) in rows" :key="key">
       <td :class="getCellStyle(cell)" v-for="(cell, key) in row" :key="key">
@@ -43,6 +43,11 @@
       value: {},
       selectionMode: {
         default: 'month'
+      },
+      tableKey: {},
+      tableType: {
+        type: String,
+        default: null
       },
       minDate: {},
 
@@ -104,9 +109,11 @@
         const today = new Date();
         const month = cell.text;
         const defaultValue = this.defaultValue ? Array.isArray(this.defaultValue) ? this.defaultValue : [this.defaultValue] : [];
-        style.disabled = typeof this.disabledDate === 'function'
-          ? datesInMonth(year, month).every(this.disabledDate)
-          : false;
+        if (this.tableType) {
+          style.disabled = cell.disabled;
+        } else {
+          style.disabled = typeof this.disabledDate === 'function' ? datesInMonth(year, month).every(this.disabledDate) : false;
+        }
         style.current = arrayFindIndex(coerceTruthyValueToArray(this.value), date => date.getFullYear() === year && date.getMonth() === month) >= 0;
         style.today = today.getFullYear() === year && today.getMonth() === month;
         style.default = defaultValue.some(date => this.cellMatchesDate(cell, date));
@@ -140,10 +147,19 @@
             const cell = row[j];
             const index = i * 4 + j;
             const time = new Date(this.date.getFullYear(), index).getTime();
-
-            cell.inRange = minDate && time >= minDate && time <= maxDate;
-            cell.start = minDate && time === minDate;
-            cell.end = maxDate && time === maxDate;
+            if (this.tableType) {
+              cell.inRange = true;
+              if (this.tableType === 'min') {
+                cell.start = minDate && time === minDate;
+              }
+              if (this.tableType === 'max') {
+                cell.end = maxDate && time === maxDate;
+              }
+            } else {
+              cell.inRange = minDate && time >= minDate && time <= maxDate;
+              cell.start = minDate && time === minDate;
+              cell.end = maxDate && time === maxDate;
+            }
           }
         }
       },
@@ -194,17 +210,29 @@
         const month = row * 4 + column;
         const newDate = this.getMonthOfCell(month);
         if (this.selectionMode === 'range') {
-          if (!this.rangeState.selecting) {
-            this.$emit('pick', {minDate: newDate, maxDate: null});
-            this.rangeState.selecting = true;
-          } else {
-            if (newDate >= this.minDate) {
-              this.$emit('pick', {minDate: this.minDate, maxDate: newDate});
-            } else {
-              this.$emit('pick', {minDate: newDate, maxDate: this.minDate});
-            }
-            this.rangeState.selecting = false;
+          switch (this.tableType) {
+            case 'min':
+              this.$emit('minpick', {minDate: newDate, maxDate: null});
+              this.rangeState.selecting = true;
+              break;
+            case 'max':
+              this.$emit('maxpick', {minDate: null, maxDate: newDate});
+              this.rangeState.selecting = true;
+              break;
+            default:
+              this.rangeState.selecting = false;
           }
+          // if (!this.rangeState.selecting) {
+          //   this.$emit('pick', {minDate: newDate, maxDate: null});
+          //   this.rangeState.selecting = true;
+          // } else {
+          //   if (newDate >= this.minDate) {
+          //     this.$emit('pick', {minDate: this.minDate, maxDate: newDate});
+          //   } else {
+          //     this.$emit('pick', {minDate: newDate, maxDate: this.minDate});
+          //   }
+          //   this.rangeState.selecting = false;
+          // }
         } else {
           this.$emit('pick', month);
         }
@@ -231,9 +259,19 @@
 
             const index = i * 4 + j;
             const time = new Date(this.date.getFullYear(), index).getTime();
-            cell.inRange = time >= getMonthTimestamp(this.minDate) && time <= getMonthTimestamp(this.maxDate);
-            cell.start = this.minDate && time === getMonthTimestamp(this.minDate);
-            cell.end = this.maxDate && time === getMonthTimestamp(this.maxDate);
+            if (this.tableType) {
+              if (this.tableType === 'min') {
+                cell.inRange = time >= getMonthTimestamp(this.minDate);
+                cell.start = this.minDate && time === getMonthTimestamp(this.minDate);
+              } else if (this.tableType === 'max') {
+                cell.inRange = time <= getMonthTimestamp(this.maxDate);
+                cell.end = this.maxDate && time === getMonthTimestamp(this.maxDate);
+              }
+            } else {
+              cell.inRange = time >= getMonthTimestamp(this.minDate) && time <= getMonthTimestamp(this.maxDate);
+              cell.start = this.minDate && time === getMonthTimestamp(this.minDate);
+              cell.end = this.maxDate && time === getMonthTimestamp(this.maxDate);
+            }
             const isToday = time === now;
 
             if (isToday) {
@@ -241,9 +279,21 @@
             }
             cell.text = index;
             let cellDate = new Date(time);
-            cell.disabled = typeof disabledDate === 'function' && disabledDate(cellDate);
-            cell.selected = arrayFind(selectedDate, date => date.getTime() === cellDate.getTime());
+            if (this.tableType) {
 
+              if (this.tableType === 'min') {
+                if (isDate(this.maxDate)) {
+                  cell.disabled = time > getMonthTimestamp(this.maxDate);
+                }
+              } else if (this.tableType === 'max') {
+                if (isDate(this.minDate)) {
+                  cell.disabled = time < getMonthTimestamp(this.minDate);
+                }
+              }
+            } else {
+              cell.disabled = typeof disabledDate === 'function' && disabledDate(cellDate);
+            }
+            cell.selected = arrayFind(selectedDate, date => date.getTime() === cellDate.getTime());
             this.$set(row, j, cell);
           }
         }

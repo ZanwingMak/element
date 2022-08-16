@@ -465,7 +465,6 @@ export default {
 
       const newDate = this.getDateOfCell(row, column);
 
-      // fixme 范围选择抛出,需要兼容左右范围选择
       if (this.selectionMode === 'range') {
         switch (this.tableType) {
           case 'min':

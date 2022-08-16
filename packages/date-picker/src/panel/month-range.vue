@@ -33,6 +33,10 @@
               <div>{{ leftLabel }}</div>
             </div>
             <month-table
+              ref="leftDate"
+              key="leftDate"
+              table-key="leftDate"
+              table-type="min"
               selection-mode="range"
               :date="leftDate"
               :default-value="defaultValue"
@@ -40,7 +44,8 @@
               :max-date="maxDate"
               :range-state="rangeState"
               :disabled-date="disabledDate"
-              @changerange="handleChangeRange"
+              @changeminrange="handleMinChangeRange"
+              @minpick="handleMinRangePick"
               @pick="handleRangePick">
             </month-table>
           </div>
@@ -60,6 +65,10 @@
               <div>{{ rightLabel }}</div>
             </div>
             <month-table
+              ref="rightDate"
+              key="rightDate"
+              table-key="rightDate"
+              table-type="max"
               selection-mode="range"
               :date="rightDate"
               :default-value="defaultValue"
@@ -67,7 +76,8 @@
               :max-date="maxDate"
               :range-state="rangeState"
               :disabled-date="disabledDate"
-              @changerange="handleChangeRange"
+              @changemaxrange="handleMaxChangeRange"
+              @maxpick="handleMaxRangePick"
               @pick="handleRangePick">
             </month-table>
           </div>
@@ -90,6 +100,7 @@
   import MonthTable from '../basic/month-table';
   import ElInput from 'element-ui/packages/input';
   import ElButton from 'element-ui/packages/button';
+  import {isEmpty} from '../../../../src/utils/util';
 
   const calcDefaultValue = (defaultValue) => {
     if (Array.isArray(defaultValue)) {
@@ -127,7 +138,10 @@
       },
 
       enableYearArrow() {
-        return this.unlinkPanels && this.rightYear > this.leftYear + 1;
+        // note 原来的
+        // return this.unlinkPanels && this.rightYear > this.leftYear + 1;
+        // note 根据开关配置
+        return this.unlinkPanels;
       }
     },
 
@@ -140,7 +154,9 @@
         minDate: '',
         maxDate: '',
         leftDate: new Date(),
-        rightDate: nextYear(new Date()),
+        // note 原本
+        // rightDate: nextYear(new Date()),
+        rightDate: new Date(),
         rangeState: {
           endDate: null,
           selecting: false,
@@ -166,19 +182,25 @@
           this.maxDate = isDate(newVal[1]) ? new Date(newVal[1]) : null;
           if (this.minDate) {
             this.leftDate = this.minDate;
-            if (this.unlinkPanels && this.maxDate) {
-              const minDateYear = this.minDate.getFullYear();
-              const maxDateYear = this.maxDate.getFullYear();
-              this.rightDate = minDateYear === maxDateYear
-                ? nextYear(this.maxDate)
-                : this.maxDate;
-            } else {
-              this.rightDate = nextYear(this.leftDate);
-            }
-          } else {
-            this.leftDate = calcDefaultValue(this.defaultValue)[0];
-            this.rightDate = nextYear(this.leftDate);
           }
+          if (this.maxDate) {
+            this.rightDate = this.maxDate;
+          }
+          // if (this.minDate) {
+          //   this.leftDate = this.minDate;
+          //   if (this.unlinkPanels && this.maxDate) {
+          //     const minDateYear = this.minDate.getFullYear();
+          //     const maxDateYear = this.maxDate.getFullYear();
+          //     this.rightDate = minDateYear === maxDateYear
+          //       ? nextYear(this.maxDate)
+          //       : this.maxDate;
+          //   } else {
+          //     this.rightDate = nextYear(this.leftDate);
+          //   }
+          // } else {
+          //   this.leftDate = calcDefaultValue(this.defaultValue)[0];
+          //   this.rightDate = nextYear(this.leftDate);
+          // }
         }
       },
 
@@ -186,9 +208,11 @@
         if (!Array.isArray(this.value)) {
           const [left, right] = calcDefaultValue(val);
           this.leftDate = left;
-          this.rightDate = val && val[1] && left.getFullYear() !== right.getFullYear() && this.unlinkPanels
-            ? right
-            : nextYear(this.leftDate);
+          this.rightDate = right;
+          // note 原来的
+          // this.rightDate = val && val[1] && left.getFullYear() !== right.getFullYear() && this.unlinkPanels
+          //   ? right
+          //   : nextYear(this.leftDate);
         }
       }
     },
@@ -198,16 +222,19 @@
         this.minDate = null;
         this.maxDate = null;
         this.leftDate = calcDefaultValue(this.defaultValue)[0];
-        this.rightDate = nextYear(this.leftDate);
+        // note 原来的
+        // this.rightDate = nextYear(this.leftDate);
+        this.rightDate = this.leftDate;
         this.$emit('pick', null);
       },
-
-      handleChangeRange(val) {
+      handleMinChangeRange(val) {
         this.minDate = val.minDate;
+        this.rangeState = val.rangeState;
+      },
+      handleMaxChangeRange(val) {
         this.maxDate = val.maxDate;
         this.rangeState = val.rangeState;
       },
-
       handleRangePick(val, close = true) {
         const defaultTime = this.defaultTime || [];
         const minDate = modifyWithTimeString(val.minDate, defaultTime[0]);
@@ -228,6 +255,48 @@
         this.handleConfirm();
       },
 
+      // 选择最小日期抛出
+      handleMinRangePick(val, close = true) {
+        const defaultTime = this.defaultTime || [];
+        const minDate = modifyWithTimeString(val.minDate, defaultTime[0]);
+        const maxDate = modifyWithTimeString(val.maxDate, defaultTime[1]);
+        if (this.maxDate === maxDate && this.minDate === minDate) {
+          return;
+        }
+        this.onPick && this.onPick(val);
+        // this.maxDate = maxDate;
+        this.minDate = minDate;
+
+        // workaround for https://github.com/ElemeFE/element/issues/7539, should remove this block when we don't have to care about Chromium 55 - 57
+        setTimeout(() => {
+          // this.maxDate = maxDate;
+          this.minDate = minDate;
+        }, 10);
+        if (!close || this.showTime) return;
+        // NOTE 选中两个日期后不在关闭Popover
+        this.handleConfirm(true);
+      },
+      // 选择最大日期抛出
+      handleMaxRangePick(val, close = true) {
+        const defaultTime = this.defaultTime || [];
+        // const minDate = modifyWithTimeString(val.minDate, defaultTime[0]);
+        const maxDate = modifyWithTimeString(val.maxDate, defaultTime[1]);
+        // if (this.maxDate === maxDate && this.minDate === minDate) {
+        //   return;
+        // }
+        this.onPick && this.onPick(val);
+        this.maxDate = maxDate;
+        // this.minDate = minDate;
+
+        // workaround for https://github.com/ElemeFE/element/issues/7539, should remove this block when we don't have to care about Chromium 55 - 57
+        setTimeout(() => {
+          this.maxDate = maxDate;
+          // this.minDate = minDate;
+        }, 10);
+        if (!close || this.showTime) return;
+        // NOTE 选中两个日期后不在关闭Popover
+        this.handleConfirm(true);
+      },
       handleShortcutClick(shortcut) {
         if (shortcut.onClick) {
           shortcut.onClick(this);
@@ -265,14 +334,24 @@
       },
 
       isValidValue(value) {
-        return Array.isArray(value) &&
-          value && value[0] && value[1] &&
-          isDate(value[0]) && isDate(value[1]) &&
-          value[0].getTime() <= value[1].getTime() && (
-          typeof this.disabledDate === 'function'
-            ? !this.disabledDate(value[0]) && !this.disabledDate(value[1])
-            : true
-        );
+        // note S 修改的
+        let status = function(disabledDate, value) {
+          if (!isEmpty(value[0]) && !isEmpty(value[1])) {
+            return value[0].getTime() <= value[1].getTime();
+          }
+          if (!isEmpty(value[0]) || !isEmpty(value[1])) return true;
+        };
+        return Array.isArray(value) && value && status(this.disabledDate, value);
+        // note E 修改的
+        // note 原来的
+        // return Array.isArray(value) &&
+        //   value && value[0] && value[1] &&
+        //   isDate(value[0]) && isDate(value[1]) &&
+        //   value[0].getTime() <= value[1].getTime() && (
+        //   typeof this.disabledDate === 'function'
+        //     ? !this.disabledDate(value[0]) && !this.disabledDate(value[1])
+        //     : true
+        // );
       },
 
       resetView() {
