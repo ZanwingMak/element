@@ -215,20 +215,20 @@ export default {
           }
 
           let cellDate = new Date(time);
-          if (this.tableType) {
-
-            if (this.tableType === 'min') {
-              if (isDate(this.maxDate)) {
-                cell.disabled = time > getDateTimestamp(this.maxDate);
-              }
-            } else if (this.tableType === 'max') {
-              if (isDate(this.minDate)) {
-                cell.disabled = time < getDateTimestamp(this.minDate);
-              }
-            }
-          } else {
-            cell.disabled = typeof disabledDate === 'function' && disabledDate(cellDate);
-          }
+          // note 取消限制
+          // if (this.tableType) {
+          // if (this.tableType === 'min') {
+          //   if (isDate(this.maxDate)) {
+          //     cell.disabled = time > getDateTimestamp(this.maxDate);
+          //   }
+          // } else if (this.tableType === 'max') {
+          //   if (isDate(this.minDate)) {
+          //     cell.disabled = time < getDateTimestamp(this.minDate);
+          //   }
+          // }
+          // } else {
+          cell.disabled = typeof disabledDate === 'function' && disabledDate(cellDate);
+          // }
           cell.selected = arrayFind(selectedDate, date => date.getTime() === cellDate.getTime());
           cell.customClass = typeof cellClassName === 'function' && cellClassName(cellDate);
           this.$set(row, this.showWeekNumber ? j + 1 : j, cell);
@@ -465,7 +465,6 @@ export default {
 
       const newDate = this.getDateOfCell(row, column);
 
-      // fixme 范围选择抛出,需要兼容左右范围选择
       if (this.selectionMode === 'range') {
         switch (this.tableType) {
           case 'min':

@@ -92,6 +92,17 @@ import Emitter from 'element-ui/src/mixins/emitter';
 import ElInput from 'element-ui/packages/input';
 import merge from 'element-ui/src/utils/merge';
 import {isEmpty} from '../../../src/utils/util';
+// import {clearTime} from '../../../src/utils/date-util';
+
+// const getDateTimestamp = function(time) {
+//   if (typeof time === 'number' || typeof time === 'string') {
+//     return clearTime(new Date(time)).getTime();
+//   } else if (time instanceof Date) {
+//     return clearTime(time).getTime();
+//   } else {
+//     return NaN;
+//   }
+// };
 
 const NewPopper = {
   props: {
@@ -424,6 +435,7 @@ export default {
         this.blur();
       }
     },
+    // note 取消监听,使用defaultValue修改？
     parsedValue: {
       immediate: true,
       handler(val) {
@@ -520,20 +532,19 @@ export default {
         return '';
       }
     },
-
+    // note
     parsedValue() {
       if (!this.value) return this.value; // component value is not set
       if (this.type === 'time-select') return this.value; // time-select does not require parsing, this might change in next major version
-
       const valueIsDateObject = isDateObject(this.value) || (Array.isArray(this.value) && this.value.every(isDateObject));
       if (valueIsDateObject) {
         return this.value;
       }
 
       if (this.valueFormat) {
+        console.log(this.value);
         return parseAsFormatAndType(this.value, this.valueFormat, this.type, this.rangeSeparator) || this.value;
       }
-
       // NOTE: deal with common but incorrect usage, should remove in next major version
       // user might provide string / timestamp without value-format, coerce them into date (or array of date)
       return Array.isArray(this.value) ? this.value.map(val => new Date(val)) : new Date(this.value);
@@ -682,10 +693,12 @@ export default {
       if (value) {
         this.userInput = [this.formatToString(value), this.displayValue[1]];
         const newValue = [value, this.picker.value && this.picker.value[1]];
-        this.picker.value = newValue;
         if (this.isValidValue(newValue)) {
+          this.picker.value = newValue;
           this.emitInput(newValue);
           this.userInput = null;
+        } else {
+          this.userInput[0] = '';
         }
       }
     },
@@ -695,10 +708,12 @@ export default {
       if (value) {
         this.userInput = [this.displayValue[0], this.formatToString(value)];
         const newValue = [this.picker.value && this.picker.value[0], value];
-        this.picker.value = newValue;
         if (this.isValidValue(newValue)) {
+          this.picker.value = newValue;
           this.emitInput(newValue);
           this.userInput = null;
+        } else {
+          this.userInput[1] = '';
         }
       }
     },

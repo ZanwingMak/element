@@ -223,6 +223,7 @@ import DateTable from '../basic/date-table';
 import ElInput from 'element-ui/packages/input';
 import ElButton from 'element-ui/packages/button';
 import {isEmpty} from '../../../../src/utils/util';
+import {clearTime} from '../../../../src/utils/date-util';
 
 const calcDefaultValue = (defaultValue) => {
   if (Array.isArray(defaultValue)) {
@@ -342,7 +343,8 @@ export default {
       minDate: '',
       maxDate: '',
       leftDate: new Date(),
-      rightDate: nextMonth(new Date()),
+      rightDate: new Date(),
+      // rightDate: nextMonth(new Date()),
       rangeState: {
         // endDate: null,
         selecting: false,
@@ -457,7 +459,9 @@ export default {
       if (!Array.isArray(this.value)) {
         const [left, right] = calcDefaultValue(val);
         this.leftDate = left;
-        this.rightDate = val && val[1] && this.unlinkPanels ? right : nextMonth(this.leftDate);
+        this.rightDate = right;
+        // note 原来
+        // this.rightDate = val && val[1] && this.unlinkPanels ? right : nextMonth(this.leftDate);
       }
     }
   },
@@ -467,7 +471,9 @@ export default {
       this.minDate = null;
       this.maxDate = null;
       this.leftDate = calcDefaultValue(this.defaultValue)[0];
-      this.rightDate = nextMonth(this.leftDate);
+      this.rightDate = this.leftDate;
+      // note 原来的
+      // this.rightDate = nextMonth(this.leftDate);
       this.$emit('pick', null);
     },
 
@@ -721,21 +727,32 @@ export default {
     // 校验合法性
     isValidValue(value) {
       let status = function(disabledDate, value) {
-        if (value.every(isEmpty)) {
-          return value[0].getTime() <= value[1].getTime();
-        }
+        // if (!isEmpty(value[0]) && !isEmpty(value[1])) {
+        //   return value[0].getTime() <= value[1].getTime();
+        // }
         if (!isEmpty(value[0]) || !isEmpty(value[1])) return true;
       };
       return Array.isArray(value) && value && status(this.disabledDate, value);
     },
-
+    getDateTimestamp(time) {
+      if (typeof time === 'number' || typeof time === 'string') {
+        return clearTime(new Date(time)).getTime();
+      } else if (time instanceof Date) {
+        return clearTime(time).getTime();
+      } else {
+        return NaN;
+      }
+    },
     resetView() {
       // NOTE: this is a hack to reset {min, max}Date on picker open.
       // TODO: correct way of doing so is to refactor {min, max}Date to be dependent on value and internal selection state
       //       an alternative would be resetView whenever picker becomes visible, should also investigate date-panel's resetView
+
       if (this.minDate && this.maxDate == null) this.rangeState.selecting = false;
       this.minDate = this.value && isDate(this.value[0]) ? new Date(this.value[0]) : null;
       this.maxDate = this.value && isDate(this.value[0]) ? new Date(this.value[1]) : null;
+      // console.log('resetView_minDate', this.minDate);
+      // console.log('resetView_maxDate', this.maxDate);
     }
   },
 
